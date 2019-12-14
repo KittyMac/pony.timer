@@ -1,6 +1,6 @@
 
 interface TTimerNotify
-	be timerNotify()
+	be timerNotify(timer:TTimer tag)
 
 actor TTimer
 	"""
@@ -10,6 +10,7 @@ actor TTimer
 	
 	let milliseconds:U64
 	var timerStartMillis:U64
+	var cancelled:Bool = false
 	
 	fun _priority():USize => -99
 		
@@ -21,10 +22,23 @@ actor TTimer
 		
 		_check()
 	
+	be resume() =>
+		if cancelled == true then
+			cancelled = false
+			_check()
+		end
+	
+	be cancel() =>
+		cancelled = true
+	
 	be _check() =>
+		if cancelled then
+			return
+		end
+		
 		let nowInMillis = @ponyint_cpu_tick[U64]() / 1_000_000
 		if nowInMillis >= (timerStartMillis + milliseconds) then
-			target.timerNotify()
+			target.timerNotify(this)
 			timerStartMillis = nowInMillis
 		end
 		
