@@ -8,15 +8,17 @@ actor TTimer
 	"""
 	let target:TTimerNotify tag
 	
+	let avoidFlooding:Bool
 	let milliseconds:U64
 	var timerStartMillis:U64
 	var cancelled:Bool = false
 	
 	fun _priority():USize => -99
 		
-	new create(milliseconds':U64, target':TTimerNotify tag) =>
+	new create(milliseconds':U64, target':TTimerNotify tag, avoidFlooding':Bool = false) =>
 		target = target'
 		
+		avoidFlooding = avoidFlooding'
 		milliseconds = milliseconds'
 		timerStartMillis = @ponyint_cpu_tick[U64]() / 1_000_000
 		
@@ -38,7 +40,15 @@ actor TTimer
 		
 		let nowInMillis = @ponyint_cpu_tick[U64]() / 1_000_000
 		if nowInMillis >= (timerStartMillis + milliseconds) then
-			target.timerNotify(this)
+		
+			if avoidFlooding == false then
+				target.timerNotify(this)
+			else
+				if @ponyint_actor_num_messages[USize](target) < 4 then
+					target.timerNotify(this)
+				end
+			end
+			
 			timerStartMillis = nowInMillis
 		end
 		
