@@ -53,10 +53,14 @@ actor TTimer
 		timers(consume timerIso)
 	
 	be resume() =>
-		let timerIso = Timer(TTimerCallback(this, target, avoidFlooding), milliseconds * 1_000_000, milliseconds * 1_000_000)
-		timer = timerIso
-		timers(consume timerIso)
+		if cancelled == true then
+			cancelled = false
+			let timerIso = Timer(TTimerCallback(this, target, avoidFlooding), milliseconds * 1_000_000, milliseconds * 1_000_000)
+			timer = timerIso
+			timers(consume timerIso)
+		end
 	
 	be cancel() =>
+		cancelled = true
 		timers.cancel(timer)
 	
