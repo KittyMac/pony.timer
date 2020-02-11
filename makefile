@@ -1,19 +1,28 @@
-build_dir=./build
+all:
+	corral run -- ponyc -o ./build/ ./ttimer
+	./build/ttimer
 
-all: pony run
+test:
+	corral run -- ponyc -V=0 -o ./build/ ./ttimer
+	./build/ttimer
+
+
+
+
+corral-fetch:
+	@corral clean -q
+	@corral fetch -q
+
+corral-local:
+	@-rm corral.json
+	@-rm lock.json
+	@corral init -q
+
+corral-git:
+	@-rm corral.json
+	@-rm lock.json
+	@corral init -q
+
+ci: corral-git corral-fetch all
 	
-pony: check-folders
-	stable env /Volumes/Development/Development/pony/ponyc/build/release/ponyc -o ./build/ ./ttimer
-
-check-folders:
-	@mkdir -p ./build
-
-clean:
-	rm ./build/*
-
-run:
-	./build/ttimer
-
-test: check-folders
-	stable env /Volumes/Development/Development/pony/ponyc/build/release/ponyc -V=0 -o ./build/ ./ttimer
-	./build/ttimer
+dev: corral-local corral-fetch all
